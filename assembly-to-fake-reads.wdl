@@ -88,7 +88,7 @@ task bbmap_randomreads {
         Int disk_size = 16
     }
 
-    Int overlap = read_length / (0.5 * required_coverage )
+    Int overlap = round( read_length / (0.5 * required_coverage ) )
 
     command <<<
     randomreads.sh \
