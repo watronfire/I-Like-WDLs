@@ -53,28 +53,16 @@ task ncbi_datasets_download_genome_accession {
 
         #### download FASTA file using ncbi_accession ####
         datasets download genome accession \
-        ~{ncbi_accession} \
-        --filename ~{ncbi_accession}.zip \
-        --include genome
+          ~{ncbi_accession} \
+          --filename ~{ncbi_accession}.zip \
+          --include genome
 
         # unzip the archive and copy FASTA and JSON to PWD, rename in the process so output filenames are predictable
         unzip ~{ncbi_accession}.zip
         cp -v ncbi_dataset/data/~{ncbi_accession}*/~{ncbi_accession}*.fna ./~{ncbi_accession}.fasta
-
-        # acquire the taxon id for the accession
-        datasets summary genome accession \
-        ~{ncbi_accession} --as-json-lines | \
-        dataformat tsv genome --fields organism-name,organism-tax-id | \
-        tail -n+2 > accession_taxonomy.tsv
-
-        cut -f 1 accession_taxonomy.tsv > TAXON_NAME
-        cut -f 2 accession_taxonomy.tsv > TAXON_ID
-        fi
     >>>
     output {
         File ncbi_datasets_assembly_fasta = "~{ncbi_accession}.fasta"
-        String taxon_name = read_string("TAXON_NAME")
-        String taxon_id = read_string("TAXON_ID")
         String ncbi_datasets_version = read_string("DATASETS_VERSION")
         String ncbi_datasets_docker = docker
     }
