@@ -23,8 +23,8 @@ workflow downsample_fastqs {
     }
 
     output {
-        File    downsampled_read1 = downsample_fastqs.read1
-        File?   downsampled_read2 = downsample_fastqs.read2
+        File    downsampled_read1 = downsample_fastqs.downsampled_read1
+        File?   downsampled_read2 = downsample_fastqs.downsampled_read2
     }
 }
 
