@@ -63,7 +63,7 @@ task generate_vcf {
 
         # Generate fasta alignment
         echo "Generating fasta alignment"
-        cat concat_reference.fasta ~{consensus_sequences} > temp_alignment.fasta
+        cat concat_reference.fasta ~{sep=" " consensus_sequences} > temp_alignment.fasta
 
         # Convert to VCF
         echo "Generating VCF alignment with snp-sites"
