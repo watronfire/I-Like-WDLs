@@ -129,7 +129,7 @@ task rename_vcf {
     File names_f = write_tsv( names )
 
     command <<<
-        bcftools reheader --sample-file ~{names_f} --output renamed_alignment.vcf.gz ~{vcf}
+        bcftools reheader --samples ~{names_f} --output renamed_alignment.vcf.gz ~{vcf}
     >>>
     output {
         File renamed_vcf = "renamed_alignment.vcf.gz"
