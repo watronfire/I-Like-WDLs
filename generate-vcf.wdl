@@ -124,7 +124,7 @@ task rename_vcf {
         Int disk_size = 4
     }
 
-    Array[Pair[String,String]] names = zip( original_names, replacement_names )
+    Array[Array[String]] names = [original_names, replacement_names]
 
 
     command <<<
