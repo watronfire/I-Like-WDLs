@@ -40,7 +40,7 @@ workflow generate_vcf {
 
 
     output {
-        File    vcf = reannotate_vcf.vcf
+        File    vcf = reannotate_vcf.reannotated_vcf
         File?   renamed_vcf = rename_vcf.renamed_vcf
     }
 }
@@ -125,7 +125,6 @@ task rename_vcf {
     }
 
     Array[Array[String]] names = [original_names, replacement_names]
-
 
     command <<<
         echo ~{write_tsv( names )} > renames.txt
