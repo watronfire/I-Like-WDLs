@@ -125,11 +125,11 @@ task rename_vcf {
         Int disk_size = 4
     }
 
-    Array[Array[String]] names = [original_names, replacement_names]
+    Array[Array[String]] names = transpose( [original_names, replacement_names] )
+    File names_f = write_tsv( names )
 
     command <<<
-        echo ~{write_tsv( names )} > renames.txt
-        bcftools reheader --sample-file renames.txt --output renamed_alignment.vcf.gz ~{vcf}
+        bcftools reheader --sample-file ~{names_f} --output renamed_alignment.vcf.gz ~{vcf}
     >>>
     output {
         File renamed_vcf = "renamed_alignment.vcf.gz"
