@@ -32,7 +32,7 @@ workflow generate_vcf {
     if (rename_samples) {
         call rename_vcf {
             input:
-                vcf = reannotate_vcf.vcf,
+                vcf = reannotate_vcf.reannotated_vcf,
                 original_names = sample_names,
                 replacement_names = replacement_names
         }
@@ -102,7 +102,7 @@ task reannotate_vcf {
         bcftools annotate --samples ^'${REFERENCE}' --rename-chrs chromosome_name.txt -Ob -o alignment.vcf.gz ~{vcf}
     >>>
     output {
-        File vcf = "alignment.vcf.gz"
+        File reannotated_vcf = "alignment.vcf.gz"
     }
     runtime {
         memory: "~{memory} GB"
@@ -132,7 +132,7 @@ task rename_vcf {
         bcftools reheader --sample-file renames.txt --output renamed_alignment.vcf.gz ~{vcf}
     >>>
     output {
-        File vcf = "renamed_alignment.vcf.gz"
+        File renamed_vcf = "renamed_alignment.vcf.gz"
     }
     runtime {
         memory: "~{memory} GB"
