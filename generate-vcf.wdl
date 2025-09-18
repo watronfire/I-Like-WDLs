@@ -42,7 +42,6 @@ workflow generate_vcf {
     output {
         File    vcf = reannotate_vcf.reannotated_vcf
         File?   renamed_vcf = rename_vcf.renamed_vcf
-        File?   names = rename_vcf.names_file
     }
 }
 
@@ -133,7 +132,6 @@ task rename_vcf {
     >>>
     output {
         File renamed_vcf = "renamed_alignment.vcf.gz"
-        File names_file = "renames.txt"
     }
     runtime {
         memory: "~{memory} GB"
