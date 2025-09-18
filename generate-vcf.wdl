@@ -124,11 +124,11 @@ task rename_vcf {
         Int disk_size = 4
     }
 
-    Map[String, String] names = as_map( zip( original_names, replacement_names ) )
+    Array[Pair[String,String]] names = zip( original_names, replacement_names )
 
 
     command <<<
-        echo ~{write_map( names )} > renames.txt
+        echo ~{write_tsv( names )} > renames.txt
         bcftools reheader --sample-file renames.txt --output renamed_alignment.vcf.gz ~{vcf}
     >>>
     output {
