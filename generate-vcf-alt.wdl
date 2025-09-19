@@ -90,7 +90,15 @@ task rename_vcf {
     File names_f = write_tsv( names )
 
     command <<<
-        bcftools view -Ou ~{vcf} | bcftools reheader --samples ~{names_f} --output renamed_alignment.vcf.gz -
+        cat << EOF > header.txt
+        ##FILTER=<ID=PASS,Description="All filters passed">
+        ##contig=<ID=AE003852,length=4033501>
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes">
+        ##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+        EOF
+
+        bcftools annotate --header-lines header.txt ~{vcf} | bcftools reheader --samples ~{names_f} | bcftools view -Oz -o renamed_alignment.vcf.gz
     >>>
     output {
         File renamed_vcf = "renamed_alignment.vcf.gz"
