@@ -22,16 +22,11 @@ workflow generate_vcf_alt {
             memory = memory,
             disk_size = disk_size
     }
-    call reannotate_vcf {
-        input:
-            vcf = generate_vcf.vcf,
-            reference = reference
-    }
 
     if (rename_samples) {
         call rename_vcf {
             input:
-                vcf = reannotate_vcf.reannotated_vcf,
+                vcf = generate_vcf.vcf,
                 original_names = sample_names,
                 replacement_names = replacement_names
         }
@@ -39,7 +34,7 @@ workflow generate_vcf_alt {
 
 
     output {
-        File    vcf = reannotate_vcf.reannotated_vcf
+        File    vcf = generate_vcf.vcf
         File?   renamed_vcf = rename_vcf.renamed_vcf
     }
 }
