@@ -24,3 +24,9 @@ workflows:
     authors:
       - name: Nathaniel L. Matteson
         email: nmatteson@bwh.harvard.edu
+  - subclass: WDL
+    primaryDescriptorPath: /vcf-to-gubbins.wdl
+    name: generate-tree-from-vcf
+    authors:
+      - name: Nathaniel L. Matteson
+        email: nmatteson@bwh.harvard.edu
