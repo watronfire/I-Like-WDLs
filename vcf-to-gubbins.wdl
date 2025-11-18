@@ -47,7 +47,7 @@ task vcf_to_fasta {
     }
 
     command <<<
-        bcftools --version -h | head -n1 | cut -f2 -d' ' | tee BCFTOOLS_VERSION
+        bcftools --version | head -n1 | cut -f2 -d' ' | tee BCFTOOLS_VERSION
 
         bcftools view -Ob -o compressed_alignment.bcf.gz ~{alignment}
         bcftools index compressed_alignment.bcf.gz
