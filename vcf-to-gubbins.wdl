@@ -53,7 +53,7 @@ task vcf_to_fasta {
         bcftools index compressed_alignment.bcf.gz
 
         for sample in $(bcftools query -l compressed_alignment.bcf.gz); do
-            bcftools consensus --mark-del N -f ~{reference} -s '${sample}' compressed_alignment.bcf.gz |\
+            bcftools consensus --mark-del N -f ~{reference} -s ${sample} compressed_alignment.bcf.gz |\
             sed -E "s,>.+$,>${sample},g" >> expanded_alignment.fasta
         done
     >>>
