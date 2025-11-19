@@ -9,6 +9,9 @@ workflow generate_tree_from_vcf {
         String docker = "staphb/bcftools:1.22"
         Int disk_size = 16
         Int memory = 16
+        Int gubbins_disk_size = 64
+        Int gubbins_memory = 16
+        Int gubbins_cpu = 16
     }
 
     call vcf_to_fasta {
@@ -23,7 +26,10 @@ workflow generate_tree_from_vcf {
         input:
             alignment = vcf_to_fasta.expanded_alignment,
             cluster_name = tree_prefix,
-            outgroup = outgroup
+            outgroup = outgroup,
+            disk_size = gubbins_disk_size,
+            memory = gubbins_memory,
+            cpu = gubbins_cpu
     }
 
     output {
@@ -77,12 +83,15 @@ task gubbins {
         String docker = "sangerpathogens/gubbins"
         Int? filter_percent = 25 #default is 25%
         Int? iterations = 5
-        String? tree_builder = "raxml"
+        String? tree_builder = "hybrid"
         String? tree_args
         String? nuc_subst_model = "GTRGAMMA"
         Int? bootstrap = 0
         String? outgroup
         File? dates_file
+        Int disk_size = 64 # in GiB? Should check the size of the input.
+        Int memory = 16
+        Int cpu = 16
     }
 
     command <<<
@@ -93,7 +102,6 @@ task gubbins {
         run_gubbins.py \
             ~{alignment} \
             --prefix ~{cluster_name} \
-            --filter-percentage ~{filter_percent} \
             --iterations ~{iterations} \
             --tree-builder ~{tree_builder} \
             ~{'--tree-args ' + tree_args} \
@@ -101,7 +109,7 @@ task gubbins {
             --bootstrap ~{bootstrap} \
             ~{'--outgroup ' + outgroup} \
             ~{'--date ' + dates_file} \
-            --threads 4
+            --threads ~{cpu}
     >>>
     output {
         String date = read_string("DATE")
@@ -116,10 +124,9 @@ task gubbins {
     }
     runtime {
         docker: "~{docker}"
-        memory: "32 GB"
-        cpu: 4
-        disks: "local-disk 100 SSD"
-        preemptible: 0
-        maxRetries: 1
+        cpu: cpu
+        memory: memory + " GiB"
+        disks: "local-disk " + disk_size + " HDD"
+        bootDiskSizeGb: 50
     }
 }
