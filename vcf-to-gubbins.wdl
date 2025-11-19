@@ -47,14 +47,14 @@ task vcf_to_fasta {
     }
 
     command <<<
-        # bcftools --version | head -n1 | cut -f2 -d' ' | tee BCFTOOLS_VERSION
-        echo "1.2.1" > BCFTOOLS_VERSION
+        bcftools --version | head -n1 | cut -f2 -d' ' | tee BCFTOOLS_VERSION
 
         bcftools view -Ob -o compressed_alignment.bcf.gz ~{alignment}
         bcftools index compressed_alignment.bcf.gz
 
-        for sample in $(bcftools query -l text.bcf.gz; do
-            bcftools consensus --mark-del N -f ~{reference} -s '${sample}' compressed_alignment.bcf.gz | sed -E "s,>.+$,>${sample},g" >> expanded_alignment.fasta
+        for sample in $(bcftools query -l text.bcf.gz); do
+            bcftools consensus --mark-del N -f ~{reference} -s '${sample}' compressed_alignment.bcf.gz |\
+            sed -E "s,>.+$,>${sample},g" >> expanded_alignment.fasta
         done
     >>>
 
