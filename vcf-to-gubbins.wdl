@@ -80,7 +80,7 @@ task gubbins {
     input {
         File alignment
         String cluster_name
-        String docker = "sangerpathogens/gubbins"
+        String docker = "staphb/gubbins:3.4.1"
         Int? filter_percent = 25 #default is 25%
         Int? iterations = 5
         String? tree_builder = "hybrid"
