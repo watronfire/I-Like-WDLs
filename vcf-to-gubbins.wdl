@@ -199,7 +199,7 @@ task generate_masked_vcf {
         bcftools reheader -h header.txt input.masked.vcf | bcftools view -Oz -o masked_alignment.vcf.gz
     >>>
     output {
-        File alignment = "masked_alignment.vcf.gz"
+        File masked_alignment = "masked_alignment.vcf.gz"
     }
     runtime {
         docker: "~{docker}"
