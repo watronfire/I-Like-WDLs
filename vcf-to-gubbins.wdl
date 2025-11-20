@@ -64,7 +64,7 @@ workflow generate_tree_from_vcf {
         File    gubbins_polymorphic_fasta = gubbins.gubbins_polymorphic_fasta
         File    gubbins_recombination_gff = gubbins.gubbins_recombination_gff
         File    gubbins_branch_stats = gubbins.gubbins_branch_stats
-        File    masked_vcf = generate_masked_vcf.alignment
+        File    masked_vcf = generate_masked_vcf.masked_alignment
         File    ml_tree = generate_tree.ml_tree
     }
 }
