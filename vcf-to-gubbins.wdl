@@ -10,7 +10,7 @@ workflow generate_tree_from_vcf {
         String iqtree_model = "GTR+G"
         Int bootstraps = 1000
         String iqtree_opts = ""
-        String iqtree_docker = "staphb/iqtree2:2.4.0"
+        String iqtree_docker = "staphb/gubbins:3.4.1"
         Int disk_size = 16
         Int memory = 16
         Int gubbins_disk_size = 64
@@ -238,7 +238,7 @@ task generate_tree {
         String iqtree_model = "GTR+G" # For comparison to other tools use HKY for bactopia, GTR+F+I for grandeur, GTR+G4 for nullarbor, GTR+G for dryad
         String iqtree_bootstraps = 1000 #  Ultrafast bootstrap replicates
         String? iqtree_opts = ""
-        String docker = "staphb/iqtree:1.6.7"
+        String docker = "staphb/gubbins:3.4.1"
     }
     command <<<
         python << CODE
