@@ -161,7 +161,7 @@ task generate_masked_vcf {
     input {
         File alignment
         File recombinant_sites
-        String docker = "watronfire/vibecheck"
+        String docker = "watronfire/vibecheck:2025.07.30"
     }
     command <<<
         bcftools view -Oz -o input.vcf.gz ~{alignment}
