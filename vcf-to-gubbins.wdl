@@ -7,6 +7,10 @@ workflow generate_tree_from_vcf {
         String tree_prefix
         String? outgroup
         String docker = "staphb/bcftools:1.22"
+        String iqtree_model = "GTR+G"
+        Int bootstraps = 1000
+        String iqtree_opts = ""
+        String iqtree_docker = "staphb/iqtree2:2.4.0"
         Int disk_size = 16
         Int memory = 16
         Int gubbins_disk_size = 64
@@ -36,6 +40,21 @@ workflow generate_tree_from_vcf {
             alignment = vcf_to_fasta.expanded_alignment,
             recombinant_sites = gubbins.gubbins_recombination_gff
     }
+    call sparsify_alignment {
+        input:
+            alignment = gubbins.gubbins_polymorphic_fasta
+    }
+
+    call generate_tree {
+        input:
+            sparse_alignment = sparsify_alignment.sparse_alignment,
+            reference = reference,
+            cluster_name = tree_prefix,
+            iqtree_model = iqtree_model,
+            iqtree_bootstraps = bootstraps,
+            iqtree_opts = iqtree_opts,
+            docker = iqtree_docker,
+    }
 
     output {
         String  bcftools_version = vcf_to_fasta. bcftools_version
@@ -46,6 +65,7 @@ workflow generate_tree_from_vcf {
         File    gubbins_recombination_gff = gubbins.gubbins_recombination_gff
         File    gubbins_branch_stats = gubbins.gubbins_branch_stats
         File    masked_vcf = generate_masked_vcf.alignment
+        File    ml_tree = generate_tree.ml_tree
     }
 }
 
@@ -181,11 +201,82 @@ task generate_masked_vcf {
     output {
         File alignment = "masked_alignment.vcf.gz"
     }
-        runtime {
+    runtime {
         docker: "~{docker}"
         cpu: 1
         memory: 8 + " GiB"
         disks: "local-disk 16 SSD"
         bootDiskSizeGb: 10
+    }
+}
+
+task sparsify_alignment {
+    input {
+        File alignment
+        String docker = "staphb/snp-sites"
+    }
+    command <<<
+        snp-sites -o sparse_alignment.fasta ~{alignment}
+    >>>
+    output {
+        File sparse_alignment = "sparse_alignment.fasta"
+    }
+    runtime {
+        docker: "~{docker}"
+        cpu: 1
+        memory: 16 + " GiB"
+        disks: "local-disk 24 SSD"
+        bootDiskSizeGb: 50
+    }
+}
+
+task generate_tree {
+    input {
+        File sparse_alignment
+        String cluster_name
+        File reference = "gs://bacpage-resources/vc_reference.union.fasta"
+        String iqtree_model = "GTR+G" # For comparison to other tools use HKY for bactopia, GTR+F+I for grandeur, GTR+G4 for nullarbor, GTR+G for dryad
+        String iqtree_bootstraps = 1000 #  Ultrafast bootstrap replicates
+        String? iqtree_opts = ""
+        String docker = "staphb/iqtree:1.6.7"
+    }
+    command <<<
+        python << CODE
+            counts = {
+                "A" : 0,
+                "C" : 0,
+                "G" : 0,
+                "T" : 0
+            }
+
+            with open( "~{reference}", "rt" ) as f:
+                for line in f:
+                    if not line.startswith(">"):
+                        upper_line = line.upper()
+                        for char in upper_line:
+                            if char in counts:
+                                counts[char] += 1
+
+            print( ",".join([str( counts[c] ) for c in ["A", "C", "G", "T"]]) )
+        CODE > sites.txt
+
+        cp ~{sparse_alignment} msa.fasta
+        iqtree \
+            -nt AUTO \
+            -s msa.fasta \
+            -m ~{iqtree_model} \
+            -bb ~{iqtree_bootstraps} \
+            -fconst $(cat sites.txt) \
+            ~{iqtree_opts}
+        cp msa.fasta.contree ~{cluster_name}_iqtree.tree
+    >>>
+    output {
+        File ml_tree = "~{cluster_name}_iqtree.tree"
+    }
+    runtime {
+        docker: "~{docker}"
+        memory: "16 GB"
+        cpu: 16
+        disks: "local-disk 24 SSD"
     }
 }
