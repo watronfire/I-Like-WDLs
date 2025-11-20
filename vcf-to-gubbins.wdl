@@ -31,6 +31,11 @@ workflow generate_tree_from_vcf {
             memory = gubbins_memory,
             cpu = gubbins_cpu
     }
+    call generate_masked_vcf {
+        input:
+            alignment = vcf_to_fasta.expanded_alignment,
+            recombinant_sites = gubbins.gubbins_recombination_gff
+    }
 
     output {
         String  bcftools_version = vcf_to_fasta. bcftools_version
@@ -40,6 +45,7 @@ workflow generate_tree_from_vcf {
         File    gubbins_polymorphic_fasta = gubbins.gubbins_polymorphic_fasta
         File    gubbins_recombination_gff = gubbins.gubbins_recombination_gff
         File    gubbins_branch_stats = gubbins.gubbins_branch_stats
+        File    masked_vcf = generate_masked_vcf.alignment
     }
 }
 
@@ -128,5 +134,58 @@ task gubbins {
         memory: memory + " GiB"
         disks: "local-disk " + disk_size + " HDD"
         bootDiskSizeGb: 50
+    }
+}
+
+task generate_masked_vcf {
+    input {
+        File alignment
+        File recombinant_sites
+        String docker = "watronfire/vibecheck"
+    }
+    command <<<
+        bcftools view -Oz -o input.vcf.gz ~{alignment}
+        bcftools view -h ~{alignment} > header.txt
+
+        python << CODE
+        import pandas as pd
+        import io
+        import gzip
+
+        def read_vcf(path):
+            with gzip.open(path, "rt") as f:
+                lines = [l for l in f if not l.startswith('##')]
+            return pd.read_csv(
+                io.StringIO(''.join(lines)),
+                dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+                       'QUAL': str, 'FILTER': str, 'INFO': str},
+                sep='\t'
+            )
+
+        gff_columns = ["seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute"]
+        gff = pd.read_csv( "~{recombinant_sites}", sep="\t", header=None, comment="#", names=gff_columns )
+        gff["taxa"] = gff["attribute"].str.extract( r'taxa="([^"]*)"' )
+
+        vcf = read_vcf( "input.vcf.gz" )
+
+        for _, entry in gff.iterrows():
+            vcf.loc[vcf["POS"].between( entry["start"], entry["end"]), entry["taxa"].split()] = "."
+
+        with open( "input.masked.vcf", "wt" ) as f:
+            f.write("##fileformat=VCFv4.2\n")
+            vcf.to_csv( f, sep="\t", index=False)
+        CODE
+
+        bcftools reheader -h header.txt input.masked.vcf | bcftools view -Oz -o masked_alignment.vcf.gz
+    >>>
+    output {
+        File alignment = "masked_alignment.vcf.gz"
+    }
+        runtime {
+        docker: "~{docker}"
+        cpu: 1
+        memory: 8 + " GiB"
+        disks: "local-disk 16 SSD"
+        bootDiskSizeGb: 10
     }
 }
