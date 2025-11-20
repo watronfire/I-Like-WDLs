@@ -242,23 +242,23 @@ task generate_tree {
     }
     command <<<
         python << CODE
-            counts = {
-                "A" : 0,
-                "C" : 0,
-                "G" : 0,
-                "T" : 0
-            }
+        counts = {
+            "A" : 0,
+            "C" : 0,
+            "G" : 0,
+            "T" : 0
+        }
 
-            with open( "~{reference}", "rt" ) as f:
-                for line in f:
-                    if not line.startswith(">"):
-                        upper_line = line.upper()
-                        for char in upper_line:
-                            if char in counts:
-                                counts[char] += 1
+        with open( "~{reference}", "rt" ) as f:
+            for line in f:
+                if not line.startswith(">"):
+                    upper_line = line.upper()
+                    for char in upper_line:
+                        if char in counts:
+                            counts[char] += 1
 
-            with open( "sites.txt", "wt" ) as f:
-                f.write( ",".join([str( counts[c] ) for c in ["A", "C", "G", "T"]]) )
+        with open( "sites.txt", "wt" ) as f:
+            f.write( ",".join([str( counts[c] ) for c in ["A", "C", "G", "T"]]) )
         CODE
 
         cp ~{sparse_alignment} msa.fasta
