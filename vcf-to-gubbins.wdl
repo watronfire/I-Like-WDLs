@@ -37,7 +37,7 @@ workflow generate_tree_from_vcf {
     }
     call generate_masked_vcf {
         input:
-            alignment = vcf_to_fasta.expanded_alignment,
+            alignment = alignment,
             recombinant_sites = gubbins.gubbins_recombination_gff
     }
     call sparsify_alignment {
@@ -257,8 +257,9 @@ task generate_tree {
                             if char in counts:
                                 counts[char] += 1
 
-            print( ",".join([str( counts[c] ) for c in ["A", "C", "G", "T"]]) )
-        CODE > sites.txt
+            with open( "sites.txt", "wt" ) as f:
+                f.write( ",".join([str( counts[c] ) for c in ["A", "C", "G", "T"]]) )
+        CODE
 
         cp ~{sparse_alignment} msa.fasta
         iqtree \
