@@ -322,11 +322,15 @@ task clock_rate_filter {
         Int disk_space = 24
     }
     Array[Array[String]] dates = transpose( [sample_names, sample_dates] )
-    File dates_f = write_tsv( dates, true, ["taxa", "collection_date"] )
+    File dates_f = write_tsv( dates )
     command <<<
+
+        echo "node_name\tdate\n" > dates.tsv
+        cat ~{dates_f} >> dates.tsv
+
         treetime clock \
             --tree ~{ml_tree} \
-            --dates ~{dates_f} \
+            --dates dates.tsv \
             --clock-filter ~{iqr} \
             --keep-root \
             --prune-outliers \
