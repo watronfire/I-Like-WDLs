@@ -4,8 +4,11 @@ workflow generate_tree_from_vcf {
     input {
         File alignment
         File reference = "gs://bacpage-resources/vc_reference.union.fasta"
+        Array[String] alignment_names
+        Array[String] dates
         String tree_prefix
         String? outgroup
+        Int iqr_clock_filter = 3
         String docker = "staphb/bcftools:1.22"
         String iqtree_model = "GTR+G"
         Int bootstraps = 1000
@@ -49,11 +52,27 @@ workflow generate_tree_from_vcf {
         input:
             sparse_alignment = sparsify_alignment.sparse_alignment,
             reference = reference,
+            starting_tree = gubbins.gubbins_final_tree,
             cluster_name = tree_prefix,
+            outgroup = outgroup,
             iqtree_model = iqtree_model,
             iqtree_bootstraps = bootstraps,
             iqtree_opts = iqtree_opts,
             docker = iqtree_docker,
+    }
+
+    call clock_rate_filter {
+        input:
+            ml_tree = generate_tree.ml_tree,
+            sample_names = alignment_names,
+            sample_dates = dates,
+            iqr = iqr_clock_filter
+    }
+
+    call build_usher_tree {
+        input:
+            rooted_tree = clock_rate_filter.rooted_tree,
+            vcf_alignment = generate_masked_vcf.masked_alignment
     }
 
     output {
@@ -66,6 +85,10 @@ workflow generate_tree_from_vcf {
         File    gubbins_branch_stats = gubbins.gubbins_branch_stats
         File    masked_vcf = generate_masked_vcf.masked_alignment
         File    ml_tree = generate_tree.ml_tree
+        File    rooted_tree = clock_rate_filter.rooted_tree
+        File    rtt_distances = clock_rate_filter.rtt_distances
+        File    rtt_plot = clock_rate_filter.rtt_plot
+        File    protobuf_tree = build_usher_tree.protobuf_tree
     }
 }
 
@@ -234,6 +257,7 @@ task generate_tree {
     input {
         File sparse_alignment
         String cluster_name
+        File? starting_tree
         File reference = "gs://bacpage-resources/vc_reference.union.fasta"
         String iqtree_model = "GTR+G" # For comparison to other tools use HKY for bactopia, GTR+F+I for grandeur, GTR+G4 for nullarbor, GTR+G for dryad
         String iqtree_bootstraps = 1000 #  Ultrafast bootstrap replicates
@@ -269,6 +293,7 @@ task generate_tree {
             -m ~{iqtree_model} \
             -bb ~{iqtree_bootstraps} \
             -fconst $(cat sites.txt) \
+            ~{'-t ' + starting_tree} \
             ~{'-o ' + outgroup} \
             ~{iqtree_opts}
 
@@ -282,5 +307,66 @@ task generate_tree {
         memory: "16 GB"
         cpu: 16
         disks: "local-disk 24 SSD"
+    }
+}
+
+task clock_rate_filter {
+    input {
+        File ml_tree
+        Array[String] sample_names
+        Array[String] sample_dates
+        Int iqr = 3
+        String docker = "nextstrain/base:build-20251119T000157Z"
+        Int memory = 24
+        Int cpu = 4
+        Int disk_space = 24
+    }
+    Array[Array[String]] dates = transpose( [sample_names, sample_dates] )
+    File dates_f = write_tsv( dates, true, ["taxa", "collection_date"] )
+    command <<<
+        treetime clock \
+            --tree ~{ml_tree} \
+            --dates ~{dates_f} \
+            --clock-filter ~{iqr} \
+            --keep-root \
+            --prune-outliers \
+            --outdir clock_result
+    >>>
+    output {
+        File rooted_tree = "clock_results/rerooted.newick"
+        File rtt_distances = "clock_results/rtt.csv"
+        File rtt_plot = "clock_results/root_to_tip_regression.pdf"
+    }
+runtime {
+        docker: docker
+        memory: memory + " GB"
+        cpu: cpu
+        disks:  "local-disk " + disk_space + " HDD"
+        preemptible: 0
+    }
+}
+
+task build_usher_tree {
+    input {
+        File rooted_tree
+        File vcf_alignment
+        String docker = "us-docker.pkg.dev/general-theiagen/pathogengenomics/usher:0.6.2"
+        Int memory = 16
+        Int cpu = 4
+        Int disk_size = 24
+    }
+    command <<<
+        usher -t ~{rooted_tree} -v ~{vcf_alignment} -o global_tree.pb -c -d output/
+    >>>
+    output {
+        File protobuf_file = "global_tree.pb"
+    }
+    runtime {
+        docker: docker
+        memory: memory + " GB"
+        cpu :  cpu
+        disks:  "local-disk " + disk_size + " HDD"
+        disk: disk_size + " GB"
+        dx_instance_type: "mem3_ssd1_v2_x4"
     }
 }
