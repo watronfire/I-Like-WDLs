@@ -238,6 +238,7 @@ task generate_tree {
         String iqtree_model = "GTR+G" # For comparison to other tools use HKY for bactopia, GTR+F+I for grandeur, GTR+G4 for nullarbor, GTR+G for dryad
         String iqtree_bootstraps = 1000 #  Ultrafast bootstrap replicates
         String? iqtree_opts = ""
+        String? outgroup
         String docker = "staphb/gubbins:3.4.1"
     }
     command <<<
@@ -268,8 +269,10 @@ task generate_tree {
             -m ~{iqtree_model} \
             -bb ~{iqtree_bootstraps} \
             -fconst $(cat sites.txt) \
+            ~{'-o ' + outgroup} \
             ~{iqtree_opts}
-        cp msa.fasta.contree ~{cluster_name}_iqtree.tree
+
+        cat msa.fasta.treefile | sed  's/|_/|?/g' > ~{cluster_name}_iqtree.tree
     >>>
     output {
         File ml_tree = "~{cluster_name}_iqtree.tree"
