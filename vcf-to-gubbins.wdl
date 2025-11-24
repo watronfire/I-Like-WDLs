@@ -156,7 +156,7 @@ task gubbins {
             ~{'--tree-args ' + tree_args} \
             ~{'--model ' + nuc_subst_model} \
             --bootstrap ~{bootstrap} \
-            ~{'--outgroup ' + outgroup} \
+            ~{'--outgroup "' + outgroup + '"'} \
             ~{'--date ' + dates_file} \
             --threads ~{cpu}
     >>>
