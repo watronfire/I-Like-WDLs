@@ -294,7 +294,7 @@ task generate_tree {
             -bb ~{iqtree_bootstraps} \
             -fconst $(cat sites.txt) \
             ~{'-t ' + starting_tree} \
-            ~{'-o ' + outgroup} \
+            ~{"-o '" + outgroup + "'"} \
             ~{iqtree_opts}
 
         cat msa.fasta.treefile | sed  's/|_/|?/g' > ~{cluster_name}_iqtree.tree
