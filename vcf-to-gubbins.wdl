@@ -326,8 +326,8 @@ task clock_rate_filter {
     File dates_f = write_tsv( dates )
     command <<<
 
-        echo "name\tdate" > dates.tsv
-        cat ~{dates_f} >> dates.tsv
+        echo "name\tdate" > adates.tsv
+        cat ~{dates_f} >> adates.tsv
 
         #treetime clock \
         #    --tree ~{ml_tree} \
@@ -338,7 +338,7 @@ task clock_rate_filter {
         #    --outdir clock_result
     >>>
     output {
-        File dates_file = "dates.tsv"
+        File dates_file = "adates.tsv"
         File rooted_tree = "clock_results/rerooted.newick"
         File rtt_distances = "clock_results/rtt.csv"
         File rtt_plot = "clock_results/root_to_tip_regression.pdf"
