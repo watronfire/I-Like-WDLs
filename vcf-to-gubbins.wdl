@@ -89,6 +89,7 @@ workflow generate_tree_from_vcf {
         File    rtt_distances = clock_rate_filter.rtt_distances
         File    rtt_plot = clock_rate_filter.rtt_plot
         File    protobuf_file = build_usher_tree.protobuf_file
+        File    dates_file = clock_rate_filter.dates_file
     }
 }
 
