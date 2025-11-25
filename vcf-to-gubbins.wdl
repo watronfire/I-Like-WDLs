@@ -331,7 +331,7 @@ task clock_rate_filter {
 
         treetime clock \
             --tree ~{ml_tree} \
-            --dates dates.tsv \
+            --dates adates.tsv \
             --clock-filter ~{iqr} \
             --keep-root \
             --prune-outliers \
