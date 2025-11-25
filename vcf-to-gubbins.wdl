@@ -326,7 +326,7 @@ task clock_rate_filter {
     File dates_f = write_tsv( dates )
     command <<<
 
-        echo "node_name\tdate\n" > dates.tsv
+        echo "name\tdate" > dates.tsv
         cat ~{dates_f} >> dates.tsv
 
         treetime clock \
