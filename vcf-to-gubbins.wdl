@@ -65,6 +65,7 @@ workflow generate_tree_from_vcf {
         input:
             ml_tree = generate_tree.ml_tree,
             sample_names = alignment_names,
+            reference = reference,
             sample_dates = dates,
             iqr = iqr_clock_filter
     }
@@ -316,6 +317,7 @@ task clock_rate_filter {
         File ml_tree
         Array[String] sample_names
         Array[String] sample_dates
+        File reference = "gs://bacpage-resources/vc_reference.union.fasta"
         Int iqr = 3
         String docker = "nextstrain/base:build-20251119T000157Z"
         Int memory = 24
@@ -329,12 +331,21 @@ task clock_rate_filter {
         echo -e "name\tdate" > adates.tsv
         cat ~{dates_f} >> adates.tsv
 
+        python << CODE
+        from Bio import SeqIO
+
+        ref = SeqIO.read( "~{reference}", "fasta" )
+        with open( "length.txt", "wt" ) as f:
+            f.write( str( len( ref ) ) )
+        CODE
+
         treetime clock \
             --tree ~{ml_tree} \
             --dates adates.tsv \
             --clock-filter ~{iqr} \
             --keep-root \
             --prune-outliers \
+            --sequence-length $(cat length.txt) \
             --outdir clock_result
     >>>
     output {
