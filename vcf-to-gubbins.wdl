@@ -326,16 +326,16 @@ task clock_rate_filter {
     File dates_f = write_tsv( dates )
     command <<<
 
-        echo "name\tdate" > adates.tsv
+        echo -e "name\tdate" > adates.tsv
         cat ~{dates_f} >> adates.tsv
 
-        #treetime clock \
-        #    --tree ~{ml_tree} \
-        #    --dates dates.tsv \
-        #    --clock-filter ~{iqr} \
-        #    --keep-root \
-        #    --prune-outliers \
-        #    --outdir clock_result
+        treetime clock \
+            --tree ~{ml_tree} \
+            --dates dates.tsv \
+            --clock-filter ~{iqr} \
+            --keep-root \
+            --prune-outliers \
+            --outdir clock_result
     >>>
     output {
         File dates_file = "adates.tsv"
