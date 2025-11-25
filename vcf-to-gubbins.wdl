@@ -329,13 +329,13 @@ task clock_rate_filter {
         echo "name\tdate" > dates.tsv
         cat ~{dates_f} >> dates.tsv
 
-        treetime clock \
-            --tree ~{ml_tree} \
-            --dates dates.tsv \
-            --clock-filter ~{iqr} \
-            --keep-root \
-            --prune-outliers \
-            --outdir clock_result
+        #treetime clock \
+        #    --tree ~{ml_tree} \
+        #    --dates dates.tsv \
+        #    --clock-filter ~{iqr} \
+        #    --keep-root \
+        #    --prune-outliers \
+        #    --outdir clock_result
     >>>
     output {
         File dates_file = "dates.tsv"
