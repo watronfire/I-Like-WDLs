@@ -350,7 +350,7 @@ task clock_rate_filter {
     >>>
     output {
         File dates_file = "adates.tsv"
-        File rooted_tree = "clock_results/rerooted.newick"
+        File rooted_tree = "clock_results/pruned.newick"
         File rtt_distances = "clock_results/rtt.csv"
         File rtt_plot = "clock_results/root_to_tip_regression.pdf"
     }
