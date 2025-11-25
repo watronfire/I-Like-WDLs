@@ -350,9 +350,9 @@ task clock_rate_filter {
     >>>
     output {
         File dates_file = "adates.tsv"
-        File rooted_tree = "clock_results/pruned.newick"
-        File rtt_distances = "clock_results/rtt.csv"
-        File rtt_plot = "clock_results/root_to_tip_regression.pdf"
+        File rooted_tree = "clock_result/pruned.newick"
+        File rtt_distances = "clock_result/rtt.csv"
+        File rtt_plot = "clock_result/root_to_tip_regression.pdf"
     }
 runtime {
         docker: docker
