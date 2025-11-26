@@ -347,10 +347,22 @@ task clock_rate_filter {
             --prune-outliers \
             --sequence-length $(cat length.txt) \
             --outdir clock_result
+
+        python << CODE
+        from Bio import Phylo
+
+        tree = Phylo.read( "~{ml_tree}", "newick" )
+        with open( "clock_result/rtt.csv", "rt" ) as f:
+            for line in f:
+                outlier = line.strip().split()[0]
+                tree.prune( outlier )
+        Phylo.write( tree, "pruned.tree", "newick", format_branch_length="%1.10f" )
+        CODE
+
     >>>
     output {
         File dates_file = "adates.tsv"
-        File rooted_tree = "clock_result/pruned.newick"
+        File rooted_tree = "pruned.tree"
         File rtt_distances = "clock_result/rtt.csv"
         File rtt_plot = "clock_result/root_to_tip_regression.pdf"
     }
