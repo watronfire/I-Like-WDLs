@@ -4,6 +4,7 @@ workflow generate_tree_from_vcf {
     input {
         File alignment
         File reference = "gs://bacpage-resources/vc_reference.union.fasta"
+        File lineage_tsv
         Array[String] alignment_names
         Array[String] dates
         String tree_prefix
@@ -75,6 +76,11 @@ workflow generate_tree_from_vcf {
             rooted_tree = clock_rate_filter.rooted_tree,
             vcf_alignment = generate_masked_vcf.masked_alignment
     }
+    call annotate_usher_tree {
+        input:
+            input_mat = build_usher_tree.protobuf_file,
+            metadata_tsv = lineage_tsv
+    }
 
     output {
         String  bcftools_version = vcf_to_fasta. bcftools_version
@@ -91,6 +97,7 @@ workflow generate_tree_from_vcf {
         File    rtt_plot = clock_rate_filter.rtt_plot
         File    protobuf_file = build_usher_tree.protobuf_file
         File    dates_file = clock_rate_filter.dates_file
+        File    annotated_tree = annotate_usher_tree.annotated_tree
     }
 }
 
@@ -403,4 +410,36 @@ task build_usher_tree {
         disk: disk_size + " GB"
         dx_instance_type: "mem3_ssd1_v2_x4"
     }
+}
+
+task annotate_usher_tree {
+	input {
+		File input_mat
+		File metadata_tsv
+
+		Int addldisk = 10
+		Int cpu = 8
+		Int memory = 16
+		Int preempt = 1
+	}
+	Int disk_size = ceil(size(input_mat, "GB")) + ceil(size(metadata_tsv, "GB")) + addldisk
+
+    String basename = basename(input_mat, ".pb")
+    String outfile = basename + "_annotated.pb"
+
+	command <<<
+	matUtils annotate -i "~{input_mat}" -c "~{metadata_tsv}" -o "~{outfile}"
+	>>>
+
+	runtime {
+		cpu: cpu
+		disks: "local-disk " + disk_size + " SSD"
+		docker: "ashedpotatoes/usher-plus:0.6.4_4"
+		memory: memory + " GB"
+		preemptible: preempt
+	}
+
+	output {
+		File annotated_tree = outfile
+	}
 }
