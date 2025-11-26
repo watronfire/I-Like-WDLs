@@ -352,9 +352,9 @@ task clock_rate_filter {
         from Bio import Phylo
 
         tree = Phylo.read( "~{ml_tree}", "newick", rooted=True )
-        with open( "clock_result/rtt.csv", "rt" ) as f:
+        with open( "clock_result/outliers.tsv", "rt" ) as f:
             for line in f:
-                outlier = line.strip().split()[0]
+                outlier = line.split()[0]
                 if outlier == "given_date":
                     continue
                 try:
