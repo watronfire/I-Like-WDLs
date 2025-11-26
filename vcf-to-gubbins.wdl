@@ -351,13 +351,16 @@ task clock_rate_filter {
         python << CODE
         from Bio import Phylo
 
-        tree = Phylo.read( "~{ml_tree}", "newick" )
+        tree = Phylo.read( "~{ml_tree}", "newick", rooted=True )
         with open( "clock_result/rtt.csv", "rt" ) as f:
             for line in f:
                 outlier = line.strip().split()[0]
                 if outlier == "given_date":
                     continue
-                tree.prune( outlier )
+                try:
+                    tree.prune( outlier )
+                except ValueError:
+                    print( f"Unable to prune {outlier}." )
         Phylo.write( tree, "pruned.tree", "newick", format_branch_length="%1.10f" )
         CODE
 
