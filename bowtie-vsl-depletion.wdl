@@ -7,7 +7,7 @@ workflow deplete_host_reads_bowtie {
         File host_genome
         String sample_name
         String docker = "staphb/bowtie2:2.5.4"
-        Int cpu = 4
+        Int cpu = 8
     }
 
     call bowtie_depletion {
@@ -23,6 +23,8 @@ workflow deplete_host_reads_bowtie {
     output {
         File unmapped_r1 = bowtie_depletion.unmapped_read1
         File unmapped_r2 = bowtie_depletion.unmapped_read2
+        Int read_counts_pre = bowtie_depletion.read_counts_pre
+        Int read_counts_post = bowtie_depletion.read_counts_post
     }
 }
 
@@ -33,8 +35,8 @@ task bowtie_depletion {
         File host_genome
         String sample_name
         String docker
-        Int cpu = 4
-        Float mem_per_cpu_gb = 4
+        Int cpu = 8
+        Float mem_per_cpu_gb = 2
         Int boot_disk_gb = 20
     }
     String template = "~{sample_name}_unmapped_%.fastq.gz"
@@ -43,7 +45,8 @@ task bowtie_depletion {
 
     command <<<
         set -euo pipefail
-        bowtie2-build ~{host_genome} host
+        zcat ~{read1} | wc -l | tee INITIAL_READS
+        bowtie2-build --threads ~{cpu} ~{host_genome} host
         bowtie2 -x host \
             -1 ~{read1} \
             -2 ~{read2} \
@@ -51,6 +54,7 @@ task bowtie_depletion {
             --very-sensitive-local \
             -p ~{cpu} \
             -S /dev/null
+        zcat ~{sample_name}_unmapped_1.fastq.gz | wc -l | tee DEPLETED_READS
         >>>
 
     runtime {
@@ -64,5 +68,7 @@ task bowtie_depletion {
     output {
         File unmapped_read1 = "~{sample_name}_unmapped_1.fastq.gz"
         File unmapped_read2 = "~{sample_name}_unmapped_2.fastq.gz"
+        Int read_counts_pre = read_int("INITIAL_READS") / 2
+        Int read_counts_post = read_int( "DEPLETED_READS" ) / 2
     }
 }
