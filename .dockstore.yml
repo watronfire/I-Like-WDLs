@@ -30,3 +30,9 @@ workflows:
     authors:
       - name: Nathaniel L. Matteson
         email: nmatteson@bwh.harvard.edu
+  - subclass: WDL
+    primaryDescriptorPath: /bam-to-fastq.wdl
+    name: bam-to-fastq
+    authors:
+      - name: Nathaniel L. Matteson
+        email: nmatteson@bwh.harvard.edu
